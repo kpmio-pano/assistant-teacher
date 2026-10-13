@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Педагогічний тандем</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+    .container { max-width: 960px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #2c3e50; margin-top: 0; }
+    h2 { text-align: center; color: #2c3e50; }
+    p.subtitle { text-align: center; color: #7f8c8d; margin-bottom: 25px; }
+    .step-section { display: none; }
+    .step-section.active { display: block; }
+
+    .stage-label { text-align: center; background: #2c3e50; color: #fff; padding: 8px 16px; border-radius: 6px; display: inline-block; margin: 0 auto 16px; font-size: 0.95em; }
+    .stage-wrap { text-align: center; margin-bottom: 4px; }
+
+    /* Drag & drop */
+    .card-pool { background: #f8fafc; border: 2px solid #cbd5e1; min-height: 100px; border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .drag-container { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+    .dropzone { flex: 1; min-width: 260px; background: #eef2f5; padding: 15px; border-radius: 8px; border: 2px dashed #b2bec3; min-height: 200px; }
+    .dropzone h3 { text-align: center; margin-top: 0; color: #34495e; font-size: 1.05em; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; }
+    .draggable { background: #3498db; color: #fff; padding: 10px 14px; border-radius: 6px; cursor: grab; font-size: 0.88em; user-select: none; transition: transform 0.1s, background 0.2s; line-height: 1.4; }
+    .draggable:active { cursor: grabbing; transform: scale(0.98); }
+    .draggable.correct { background: #2ecc71 !important; }
+    .draggable.incorrect { background: #e74c3c !important; }
+
+    /* Checklist */
+    .checklist { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .check-item { background: #f8fafc; border: 2px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background 0.2s; font-size: 0.95em; }
+    .check-item:hover { background: #edf2f7; }
+    .check-item input { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
+    .check-item.correct-match { border-color: #2ecc71; background: #e8f8f5; }
+    .check-item.wrong-match { border-color: #e74c3c; background: #fdeaea; }
+
+    /* Progress */
+    .progress-bar-wrap { background: #e2e8f0; border-radius: 8px; height: 10px; margin-bottom: 20px; }
+    .progress-bar { background: #3498db; height: 10px; border-radius: 8px; transition: width 0.4s; }
+    .progress-label { text-align: center; font-size: 0.85em; color: #64748b; margin-bottom: 6px; }
+
+    /* Buttons */
+    .btn { display: block; width: 100%; max-width: 260px; margin: 20px auto 0; padding: 12px; background: #2c3e50; color: #fff; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; text-align: center; transition: background 0.2s; }
+    .btn:hover { background: #1a252f; }
+    .feedback { text-align: center; font-weight: bold; margin-top: 15px; font-size: 1.05em; min-height: 24px; }
+    .score-board { text-align: center; background: #e8f4f8; padding: 24px; border-radius: 8px; margin-top: 20px; }
+    .principle-box { background: #fff8e1; border-left: 4px solid #f39c12; padding: 14px 18px; border-radius: 6px; margin: 20px 0; font-size: 0.93em; line-height: 1.6; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🎮 Педагогічний тандем</h1>
+  <p class="subtitle">Розподіл обов'язків на етапах уроку</p>
+
+  <div class="progress-label" id="progress-label">Етап 1 з 6</div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:20%"></div></div>
+
+  <!-- ЕТАП 1: Підготовка -->
+  <div id="step1" class="step-section active">
+    <div class="stage-wrap"><span class="stage-label">📋 Попереднє планування (до початку уроку)</span></div>
+    <p style="text-align:center">Перетягніть кожну картку у відповідне поле: <strong>Вчитель-предметник</strong> чи <strong>Асистент вчителя</strong>.</p>
+    <div class="card-pool" id="pool1" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+    <div class="drag-container">
+      <div class="dropzone" id="s1_teacher" ondragover="allowDrop(event)" ondrop="drop(event)"><h3>👩‍🏫 Вчитель-предметник</h3></div>
+      <div class="dropzone" id="s1_assistant" ondragover="allowDrop(event)" ondrop="drop(event)"><h3>🤝 Асистент вчителя</h3></div>
+    </div>
+    <button class="btn" onclick="checkDrag(1)">Перевірити ✔</button>
+    <div id="feedback1" class="feedback"></div>
+  </div>
+
+  <!-- ЕТАП 2: Вступна частина -->
+  <div id="step2" class="step-section">
+    <div class="stage-wrap"><span class="stage-label">🔔 Початок уроку та включення в діяльність (0–7 хвилин)</span></div>
+    <p style="text-align:center">Перетягніть кожну картку у відповідне поле.</p>
+    <div class="card-pool" id="pool2" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+    <div class="drag-container">
+      <div class="dropzone" id="s2_teacher" ondragover="allowDrop(event)" ondrop="drop(event)"><h3>👩‍🏫 Вчитель-предметник</h3></div>
+      <div class="dropzone" id="s2_assistant" ondragover="allowDrop(event)" ondrop="drop(event)"><h3>🤝 Асистент вчителя</h3></div>
+    </div>
+    <button class="btn" onclick="checkDrag(2)">Перевірити ✔</button>
+    <div id="feedback2" class="feedback"></div>
+  </div>
+
+  <!-- ЕТАП 3: Основна частина -->
+  <div id="step3" class="step-section">
+    <div class="stage-wrap"><span class="stage-label">📚 Основний навчальний блок (8–20 хвилин)</span></div>
+    <p style="text-align:center; background:#fff3cd; border-left:4px solid #f39c12; padding:10px; border-radius:6px; font-size:0.9em;">⚠️ <strong>Критична точка:</strong> На 12–15 хвилині настає психоемоційне виснаження. Потрібна планова сенсорна пауза.</p>
+    <p style="text-align:center">Перетягніть кожну картку у відповідне поле.</p>
+    <div class="card-pool" id="pool3" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+    <div class="drag-container">
+      <div class="dropzone" id="s3_teacher" ondragover="allowDrop(event)" ondrop="drop(event)"><h3>👩‍🏫 Вчитель-предметник</h3></div>
+      <div class="dropzone" id="s3_assistant" ondragover="allowDrop(event)" ondrop="drop(event)"><h3>🤝 Асистент вчителя</h3></div>
+    </div>
+    <button class="btn" onclick="checkDrag(3)">Перевірити ✔</button>
+    <div id="feedback3" class="feedback"></div>
+  </div>
+
+  <!-- ЕТАП 4: Заключна частина -->
+  <div id="step4" class="step-section">
+    <div class="stage-wrap"><span class="stage-label">🔁 Закріплення та повторення (21–35 хвилин)</span></div>
+    <p style="text-align:center">Перетягніть кожну картку у відповідне поле.</p>
+    <div class="card-pool" id="pool4" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+    <div class="drag-container">
+      <div class="dropzone" id="s4_teacher" ondragover="allowDrop(event)" ondrop="drop(event)"><h3>👩‍🏫 Вчитель-предметник</h3></div>
+      <div class="dropzone" id="s4_assistant" ondragover="allowDrop(event)" ondrop="drop(event)"><h3>🤝 Асистент вчителя</h3></div>
+    </div>
+    <button class="btn" onclick="checkDrag(4)">Перевірити ✔</button>
+    <div id="feedback4" class="feedback"></div>
+  </div>
+
+  <!-- ЕТАП 5: Підсумок -->
+  <div id="step5drag" class="step-section">
+    <div class="stage-wrap"><span class="stage-label">🏁 Підсумок уроку та оцінювання (36–45 хвилин)</span></div>
+    <p style="text-align:center">Перетягніть кожну картку у відповідне поле.</p>
+    <div class="card-pool" id="pool5drag" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+    <div class="drag-container">
+      <div class="dropzone" id="s5_teacher" ondragover="allowDrop(event)" ondrop="drop(event)"><h3>👩‍🏫 Вчитель-предметник</h3></div>
+      <div class="dropzone" id="s5_assistant" ondragover="allowDrop(event)" ondrop="drop(event)"><h3>🤝 Асистент вчителя</h3></div>
+    </div>
+    <button class="btn" onclick="checkDrag5()">Перевірити ✔</button>
+    <div id="feedback5drag" class="feedback"></div>
+  </div>
+
+  <!-- ЕТАП 6: Спільна взаємодія -->
+  <div id="step6" class="step-section">
+    <div class="stage-wrap"><span class="stage-label">🔗 Спільна взаємодія педагогічного тандему</span></div>
+    <p style="text-align:center">Позначте лише ті дії, які є <strong>СПІЛЬНИМИ</strong> для вчителя та асистента:</p>
+    <div class="checklist" id="checklist"></div>
+    <button class="btn" onclick="checkStep6()">Перевірити ✔</button>
+    <div id="feedback6" class="feedback"></div>
+  </div>
+
+  <!-- ФІНАЛ -->
+  <div id="stepFinal" class="step-section">
+    <h2>🎉 Вітаємо! Гру завершено!</h2>
+    <div class="score-board">
+      <p style="font-size:1.2em; margin:0 0 10px;">Ви успішно пройшли всі 6 етапів!</p>
+      <p style="color:#555; margin:0;">Ви чудово орієнтуєтеся у розподілі ролей та командній взаємодії педагогічного тандему.</p>
+    </div>
+    <div class="principle-box">
+      <strong>🔑 Ключовий принцип:</strong><br>
+      Учитель-предметник є керівником освітнього процесу на уроці та оцінює результати навчання.<br><br>
+      Асистент вчителя <em>не викладає замість учителя</em> і <em>не є особистим «тьютором»</em>, який робить завдання за дитину — він забезпечує умови для того, щоб дитина була максимально включена у спільну роботу класу.
+    </div>
+    <button class="btn" onclick="location.reload()">🔄 Зіграти знову</button>
+  </div>
+</div>
+
+<script>
+const stagesData = {
+  1: [
+    { id: 's1c1', text: 'Визначає модифікований мінімум понятійного матеріалу: замість складних теорій обирає 1 базове поняття або 1 практичну дію на урок', owner: 's1_teacher' },
+    { id: 's1c2', text: 'Передає асистенту структуру уроку із зазначенням часових проміжків (блоки по 10–12 хвилин)', owner: 's1_teacher' },
+    { id: 's1c3', text: 'Готує візуальні орієнтири: виготовляє картки з 1–2 об\'єктами та яскраві маркери-закладки для підручника', owner: 's1_assistant' },
+    { id: 's1c4', text: 'Підбирає адаптовані ручки/насадки, друкує картки з готовими варіантами відповідей (для зменшення обсягу письма)', owner: 's1_assistant' }
+  ],
+  2: [
+    { id: 's2c1', text: 'Оголошує тему уроку для класу та формулює спрощене завдання для учня/ці в 1 реченні', owner: 's2_teacher' },
+    { id: 's2c2', text: 'Проводить вхідну актуалізацію для класу', owner: 's2_teacher' },
+    { id: 's2c3', text: 'Забезпечує просторову орієнтацію: відкриває зошит/підручник на потрібній сторінці, закриває аркушем зайвий текст, залишаючи 1 завдання', owner: 's2_assistant' },
+    { id: 's2c4', text: 'Застосовує наочні картки або предмети для залучення учня/ці до відповідей на найпростіші запитання', owner: 's2_assistant' }
+  ],
+  3: [
+    { id: 's3c1', text: 'Викладання матеріалу: пояснює тему класу; при зверненні до учня/ці опирається на конкретні предмети чи малюнки (наочно-дійове мислення)', owner: 's3_teacher' },
+    { id: 's3c2', text: 'Дає класу самостійну або групову роботу', owner: 's3_teacher' },
+    { id: 's3c3', text: 'Перехідний момент (15-та хв): включає в загальний план фізкультхвилинку або переключення діяльності', owner: 's3_teacher' },
+    { id: 's3c4', text: 'Крок-за-кроком підтримка: перекладає вказівки вчителя у формі коротких алгоритмів «зроби кроки 1 і 2»', owner: 's3_assistant' },
+    { id: 's3c5', text: 'Спрощення письма: дозволяє учню/ці замість повного запису з\'єднувати лінії, наклеювати готові слова або ставити позначки (плюс/мінус)', owner: 's3_assistant' },
+    { id: 's3c6', text: 'Сенсорне розвантаження: організовує для учня/ці короткий відпочинок (пальчикова гімнастика, вправи для очей), запобігаючи апатії та афективним спалахам', owner: 's3_assistant' }
+  ],
+  4: [
+    { id: 's4c1', text: 'Організовує практичну роботу класу; залучає дитину до виконання 1 модифікованої дії (сортування/вибір правильного малюнка)', owner: 's4_teacher' },
+    { id: 's4c2', text: 'Заохочує та позитивно оцінює навіть найменші успіхи учня/ці перед класом для зниження тривожності', owner: 's4_teacher' },
+    { id: 's4c3', text: 'Надає безпосередню фізичну або зорову допомогу при виконанні практичної дії («рука в руці» за потреби)', owner: 's4_assistant' },
+    { id: 's4c4', text: 'Постійно надає емоційну підтримку, використовує систему схвалення (жести, картки успіху) для зниження фрустрації', owner: 's4_assistant' }
+  ],
+  5: [
+    { id: 's5c1', text: 'Оцінює роботу дитини відповідно до критеріїв модифікованої програми та індивідуальної динаміки', owner: 's5_teacher' },
+    { id: 's5c2', text: 'Формулює коротке домашнє завдання (або звільняє від нього за рішенням КППС)', owner: 's5_teacher' },
+    { id: 's5c3', text: 'Допомагає учню/ці підбити підсумок у формі «Що ми зробили?» за допомогою наочного розкладу дій', owner: 's5_assistant' },
+    { id: 's5c4', text: 'Записує домашнє завдання у щоденник або вклеює друковану картку з ним; фіксує результати спостережень у Щоденнику супроводу', owner: 's5_assistant' }
+  ]
+};
+
+const sharedData = [
+  { text: 'Розробка ІНП: разом визначають, які теми та поняття є критично важливими, а які можна спростити до наочно-дійового рівня', isShared: true },
+  { text: 'Попередній розбір уроку: узгоджують, яку частину матеріалу учень/ця засвоює разом із класом, а де працює за індивідуальними картками', isShared: true },
+  { text: 'Відстеження працездатності (10–15 хв): обоє тримають у полі зору динаміку втоми учня/ці та оперативно реагують на ознаки апатії чи розгальмування', isShared: true },
+  { text: 'Гнучке коригування темпу: на ходу змінюють обсяг завдання, якщо дитина не встигає або потребує багаторазового повторення', isShared: true },
+  { text: 'Визначення критеріїв успіху: оцінюють дитину за її індивідуальним поступом (чи втримала увагу, чи виконала 1–2 дії за алгоритмом)', isShared: true },
+  { text: 'Аналіз після уроку: фіксують, які прийоми (картки, наочність, «рука в руці») спрацювали, а які викликали фрустрацію', isShared: true },
+  { text: 'Включення в колектив: організовують короткі взаємодії з однокласниками (робота в парах, спільні фізкультхвилинки)', isShared: true },
+  { text: 'Створення ситуації успіху: узгоджено застосовують позитивне підкріплення (вербальна похвала, стикери успіху) для зниження тривожності', isShared: true },
+  { text: 'Асистент самостійно викладає новий матеріал замість вчителя', isShared: false },
+  { text: 'Асистент виставляє оцінки учням класу замість вчителя', isShared: false },
+  { text: 'Асистент виконує завдання за дитину з ООП замість неї', isShared: false }
+];
+
+function allowDrop(e) { e.preventDefault(); }
+function drop(e) {
+  e.preventDefault();
+  const id = e.dataTransfer.getData('text/plain');
+  const card = document.getElementById(id);
+  let target = e.target;
+  while (target && !target.classList.contains('dropzone') && !target.classList.contains('card-pool')) {
+    target = target.parentElement;
+  }
+  if (target) target.appendChild(card);
+}
+
+function initDrag(stageNum, poolId, teacherId, assistantId) {
+  const pool = document.getElementById(poolId);
+  pool.innerHTML = '';
+  [teacherId, assistantId].forEach(id => {
+    const dz = document.getElementById(id);
+    Array.from(dz.children).forEach(c => { if (c.tagName !== 'H3') dz.removeChild(c); });
+  });
+  const shuffled = [...stagesData[stageNum]].sort(() => Math.random() - 0.5);
+  shuffled.forEach(card => {
+    const el = document.createElement('div');
+    el.className = 'draggable';
+    el.draggable = true;
+    el.id = card.id;
+    el.innerText = card.text;
+    el.ondragstart = e => e.dataTransfer.setData('text/plain', e.target.id);
+    pool.appendChild(el);
+  });
+}
+
+function checkDrag(stageNum) {
+  const cards = stagesData[stageNum];
+  let correct = 0;
+  cards.forEach(cardData => {
+    const el = document.getElementById(cardData.id);
+    const parentId = el.parentElement.id;
+    if (parentId === cardData.owner) { el.className = 'draggable correct'; correct++; }
+    else { el.className = 'draggable incorrect'; }
+  });
+  const fb = document.getElementById('feedback' + stageNum);
+  if (correct === cards.length) {
+    fb.style.color = '#2ecc71';
+    fb.innerText = '✅ Чудово! Усі обов\'язки розподілено правильно.';
+    setTimeout(() => {
+      document.getElementById('step' + stageNum).classList.remove('active');
+      if (stageNum < 4) {
+        document.getElementById('step' + (stageNum + 1)).classList.add('active');
+        initDrag(stageNum + 1, 'pool' + (stageNum + 1), 's' + (stageNum + 1) + '_teacher', 's' + (stageNum + 1) + '_assistant');
+      } else {
+        document.getElementById('step5drag').classList.add('active');
+        initDrag(5, 'pool5drag', 's5_teacher', 's5_assistant');
+      }
+      updateProgress(stageNum + 1);
+    }, 1500);
+  } else {
+    fb.style.color = '#e74c3c';
+    fb.innerText = `❌ Правильно: ${correct} з ${cards.length}. Виправте картки, виділені червоним.`;
+  }
+}
+
+function checkDrag5() {
+  const cards = stagesData[5];
+  let correct = 0;
+  cards.forEach(cardData => {
+    const el = document.getElementById(cardData.id);
+    const parentId = el.parentElement.id;
+    if (parentId === cardData.owner) { el.className = 'draggable correct'; correct++; }
+    else { el.className = 'draggable incorrect'; }
+  });
+  const fb = document.getElementById('feedback5drag');
+  if (correct === cards.length) {
+    fb.style.color = '#2ecc71';
+    fb.innerText = '✅ Чудово! Усі обов\'язки розподілено правильно.';
+    setTimeout(() => {
+      document.getElementById('step5drag').classList.remove('active');
+      document.getElementById('step6').classList.add('active');
+      initStep6();
+      updateProgress(6);
+    }, 1500);
+  } else {
+    fb.style.color = '#e74c3c';
+    fb.innerText = `❌ Правильно: ${correct} з ${cards.length}. Виправте картки, виділені червоним.`;
+  }
+}
+
+function initStep6() {
+  const container = document.getElementById('checklist');
+  container.innerHTML = '';
+  sharedData.sort(() => Math.random() - 0.5).forEach((item, i) => {
+    const div = document.createElement('label');
+    div.className = 'check-item';
+    div.id = 'ci' + i;
+    div.innerHTML = `<input type="checkbox" data-index="${i}" data-shared="${item.isShared}"> <span>${item.text}</span>`;
+    container.appendChild(div);
+  });
+}
+
+function checkStep6() {
+  let allCorrect = true;
+  document.querySelectorAll('#checklist .check-item').forEach(item => {
+    const cb = item.querySelector('input');
+    const shouldBeChecked = cb.dataset.shared === 'true';
+    if (cb.checked === shouldBeChecked) { item.className = 'check-item correct-match'; }
+    else { item.className = 'check-item wrong-match'; allCorrect = false; }
+  });
+  const fb = document.getElementById('feedback6');
+  if (allCorrect) {
+    fb.style.color = '#2ecc71';
+    fb.innerText = '✅ Відмінно! Ви правильно визначили спільні дії педагогічного тандему.';
+    setTimeout(() => {
+      document.getElementById('step6').classList.remove('active');
+      document.getElementById('stepFinal').classList.add('active');
+      updateProgress(7);
+    }, 1500);
+  } else {
+    fb.style.color = '#e74c3c';
+    fb.innerText = '❌ Є помилки. Асистент не замінює вчителя, не виставляє оцінки і не виконує завдання за дитину!';
+  }
+}
+
+function updateProgress(step) {
+  const total = 6;
+  const pct = Math.min(step / total * 100, 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  if (step <= total) document.getElementById('progress-label').innerText = `Етап ${step} з ${total}`;
+  else document.getElementById('progress-label').innerText = 'Завершено! 🎉';
+}
+
+window.onload = () => initDrag(1, 'pool1', 's1_teacher', 's1_assistant');
+</script>
+</body>
+</html>
